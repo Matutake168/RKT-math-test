@@ -89,8 +89,7 @@ else:
 
         # === Part 2: Reasoning Selection (選択問題) ===
         st.header("Part 2: 思考タイプ選択 (Q11~Q13)")
-        [cite_start]st.info("以下の3問から**1つだけ**選び、解答してください。[cite: 11-13]")
-
+        st.info("以下の3問から1つだけ選び、解答してください。")
         choice = st.radio("挑戦する問題を選択:", 
                           ("[11] 幾何的証明 (Visual)", 
                            "[12] 構造的代数 (Struct)", 
