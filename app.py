@@ -9,11 +9,13 @@ st.markdown("""
 <style>
 .stTextArea textarea { font-size: 16px !important; }
 .stTextInput input { font-size: 16px !important; }
+/* ボタンのスタイル調整 */
 div.stButton > button {
     background-color: #f0f2f6;
     border: 1px solid #d0d0d5;
     color: black;
     font-weight: bold;
+    width: 100%;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -32,11 +34,50 @@ if 'start_time' not in st.session_state:
 if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 
-# 数学記号を入力する関数
-def add_symbol(symbol):
-    if "reasoning_answer" not in st.session_state:
-        st.session_state.reasoning_answer = ""
-    st.session_state.reasoning_answer += symbol
+# 各問題の回答を保存するセッションステートを初期化
+questions = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "reasoning"]
+for q in questions:
+    if q not in st.session_state:
+        st.session_state[q] = ""
+
+# --- 数学リモコン機能 (サイドバー) ---
+with st.sidebar:
+    st.header("🎛 数学リモコン")
+    st.write("記号を入力したい場所を選んでください")
+    
+    # 入力先を選択
+    target = st.radio(
+        "入力ターゲット:",
+        (
+            "Q1 (因数分解)", "Q2 (二次関数)", "Q3 (三角比)", "Q4 (確率)", "Q5 (多面体)",
+            "Q6 (円)", "Q7 (図形と式)", "Q8 (sin75)", "Q9 (積分)", "Q10 (数列)", 
+            "Part2 (記述)"
+        )
+    )
+    
+    # ターゲットに対応するセッションキーを取得
+    target_key = "reasoning" if "Part2" in target else target.split(" ")[0].lower()
+
+    st.write("---")
+    st.write("**記号パレット**")
+    
+    # 記号ボタン配置
+    col1, col2, col3 = st.columns(3)
+    
+    def add_to_target(symbol):
+        st.session_state[target_key] += symbol
+
+    with col1:
+        st.button("√", on_click=add_to_target, args=("√",))
+        st.button("x²", on_click=add_to_target, args=("^2",))
+    with col2:
+        st.button("π", on_click=add_to_target, args=("π",))
+        st.button("x³", on_click=add_to_target, args=("^3",))
+    with col3:
+        st.button("/", on_click=add_to_target, args=("/",))
+        st.button("θ", on_click=add_to_target, args=("θ",))
+
+    st.caption("※ボタンを押すと、選択したターゲットの末尾に入力されます。")
 
 # --- テスト開始・タイマー処理 ---
 if st.session_state.start_time is None:
@@ -47,7 +88,7 @@ if st.session_state.start_time is None:
 else:
     # 経過時間の計算
     elapsed_time = time.time() - st.session_state.start_time
-    remaining_time = 900 - elapsed_time  # 900秒 = 15分
+    remaining_time = 900 - elapsed_time
 
     # タイマー表示
     if remaining_time <= 0:
@@ -62,37 +103,27 @@ else:
     # === Part 1: Technique & Knowledge (必答問題) ===
     st.header("Part 1: 基礎・処理能力 (Q1~Q10)")
     
-    # Q1-Q10（フォームを使わず直接配置することでリアルタイム性を確保）
-    st.write("**(1)** 次の式を因数分解せよ")
-    st.latex(r"x^{2}+2xy+x+y^{2}+y-6")
-    a1 = st.text_input("A1", key="q1")
+    # 問題リストとLaTeXデータ
+    q_data = [
+        ("Q1", r"x^{2}+2xy+x+y^{2}+y-6", "次の式を因数分解せよ"),
+        ("Q2", r"3点 (0,2),(2,4),(-2,8)", "を通る二次関数の方程式を答えよ"),
+        ("Q3", r"CA=\sqrt{7}, CB=3\sqrt{3}, \angle ABC=30^{\circ}", "のとき、ABを求めよ"),
+        ("Q4", r"", "プレゼント交換で、自分で自分のプレゼントを選ばない確率を求めよ"),
+        ("Q5", r"", "正十二面体の辺の数を求めよ"),
+        ("Q6", r"中心が y=2x 上, 点(1,3)を通る, y軸に接する", "円の方程式を求めよ"),
+        ("Q7", r"x^{2}+y^{2}-4y=0 が x+y-1=0", "から切り取る線分の長さを求めよ"),
+        ("Q8", r"\sin 75^{\circ}", "の値を求めよ"),
+        ("Q9", r"y=x^{2}+1 と y=2x, y=-2x", "に囲まれた図形の面積を求めよ"),
+        ("Q10", r"a_{n}=1,2,4,8,16...", "第n項までの和を求めよ"),
+    ]
 
-    st.write("**(2)** 3点 $(0,2),(2,4),(-2,8)$ を通る二次関数の方程式を答えよ")
-    a2 = st.text_input("A2", key="q2")
-
-    st.write("**(3)** $\\triangle ABC$について、$CA=\\sqrt{7}, CB=3\\sqrt{3}, \\angle ABC=30^{\\circ}$ のとき、$AB$を求めよ")
-    a3 = st.text_input("A3", key="q3")
-
-    st.write("**(4)** 1人1つプレゼントを持ち寄り、3人でプレゼント交換を行う。全員無作為にプレゼントを選ぶとき、自分で自分のプレゼントを選ばない確率を求めよ")
-    a4 = st.text_input("A4", key="q4")
-
-    st.write("**(5)** 正十二面体の辺の数を求めよ")
-    a5 = st.text_input("A5", key="q5")
-
-    st.write("**(6)** 中心が直線 $y=2x$ 上にあり、y軸に接する、点 $(1,3)$ を通る円の方程式を求めよ")
-    a6 = st.text_input("A6", key="q6")
-
-    st.write("**(7)** 円 $x^{2}+y^{2}-4y=0$ が直線 $x+y-1=0$ から切り取る線分の長さを求めよ")
-    a7 = st.text_input("A7", key="q7")
-
-    st.write("**(8)** $\\sin 75^{\\circ}$ の値を求めよ")
-    a8 = st.text_input("A8", key="q8")
-
-    st.write("**(9)** $y=x^{2}+1$ と $y=2x, y=-2x$ に囲まれた図形の面積を求めよ")
-    a9 = st.text_input("A9", key="q9")
-
-    st.write("**(10)** 数列 $a_{n}=1,2,4,8,16...$ であるとき、第n項までの和を求めよ")
-    a10 = st.text_input("A10", key="q10")
+    # ループで問題を表示 (keyをq1~q10に設定)
+    for q_id, latex_text, q_text in q_data:
+        st.write(f"**({q_id})** {q_text}")
+        if latex_text:
+            st.latex(latex_text)
+        # keyを指定することで、サイドバーからの入力とリンクさせる
+        st.text_input(f"{q_id}の回答:", key=q_id.lower())
 
     st.markdown("---")
 
@@ -100,59 +131,35 @@ else:
     st.header("Part 2: 思考タイプ選択 (Q11~Q13)")
     st.info("以下の3問から1つだけ選び、解答してください。選択肢を変えると問題が表示されます。")
 
-    # ラジオボタン（これを選択すると即座に下の表示が変わります）
     choice = st.radio("挑戦する問題を選択:", 
-                      ("[11] 幾何的証明 (Visual)", 
-                       "[12] 構造的代数 (Struct)", 
-                       "[13] 論理的証明 (Logic)"))
+                      ("[11] 幾何 (Visual)", "[12] 代数 (Struct)", "[13] 論理 (Logic)"))
 
     st.markdown("### 選択した問題")
-    
-    # 選択肢に応じて問題を表示
-    if choice == "[11] 幾何的証明 (Visual)":
-        st.write("**選択(11)** すべての実数 $x$ について、次の不等式を示せ")
-        st.latex(r"\sqrt{x^{2}+1}+\sqrt{x^{2}-6x+18}\ge5")
-    
-    elif choice == "[12] 構造的代数 (Struct)":
-        st.write("**選択(12)** 次の式を因数分解せよ")
-        st.latex(r"x^{4}-x^{3}+x^{2}+2") 
-        
-    elif choice == "[13] 論理的証明 (Logic)":
-        st.write("**選択(13)** $p$ を5以上の素数とする。$p^{2}-1$ は必ず24の倍数であることを示せ")
+    if choice == "[11] 幾何 (Visual)":
+        st.latex(r"\sqrt{x^{2}+1}+\sqrt{x^{2}-6x+18}\ge5 \text{ を示せ}")
+    elif choice == "[12] 代数 (Struct)":
+        st.latex(r"x^{4}-x^{3}+x^{2}+2 \text{ を因数分解せよ}") 
+    elif choice == "[13] 論理 (Logic)":
+        st.write("$p$ を5以上の素数とする。$p^{2}-1$ は必ず24の倍数であることを示せ")
 
-    # --- 数学入力パレット ---
-    st.write("🧮 **数学記号パレット** (ボタンを押すと入力されます)")
-    col_math1, col_math2, col_math3, col_math4, col_math5 = st.columns(5)
-    
-    with col_math1:
-        st.button("√ (ルート)", on_click=add_symbol, args=("√()",))
-    with col_math2:
-        st.button("² (二乗)", on_click=add_symbol, args=("^2",))
-    with col_math3:
-        st.button("³ (三乗)", on_click=add_symbol, args=("^3",))
-    with col_math4:
-        st.button("/ (分数)", on_click=add_symbol, args=("/",))
-    with col_math5:
-        st.button("π (パイ)", on_click=add_symbol, args=("π",))
-
-    # 記述回答エリア (key="reasoning_answer" で中身を管理)
-    if "reasoning_answer" not in st.session_state:
-        st.session_state.reasoning_answer = ""
-        
-    reasoning_answer = st.text_area("記述回答欄 (証明や途中式も記入):", key="reasoning_answer", height=200)
+    # 記述回答エリア
+    st.text_area("記述回答欄 (サイドバーのターゲットを 'Part2' にして入力):", key="reasoning", height=200)
 
     st.write("---")
     
     # 提出ボタン
     if st.button("📩 回答を提出する (Submit)"):
         st.session_state.submitted = True
-        st.session_state.answers = {
+        # 全データを辞書にまとめる
+        answers = {
             "Name": name,
-            "Q1": a1, "Q2": a2, "Q3": a3, "Q4": a4, "Q5": a5,
-            "Q6": a6, "Q7": a7, "Q8": a8, "Q9": a9, "Q10": a10,
             "Selection": choice,
-            "Reasoning": reasoning_answer
+            "Reasoning": st.session_state.reasoning
         }
+        for i in range(1, 11):
+            key = f"q{i}"
+            answers[f"Q{i}"] = st.session_state[key]
+        st.session_state.answers = answers
 
     # --- 提出後の表示処理 ---
     if st.session_state.submitted:
